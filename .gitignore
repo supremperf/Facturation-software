@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dist-preview/
+release/
+.preview-data/
+.e2e-shots/
+*.log
+.DS_Store
+.env
+.env.local
+coverage/
