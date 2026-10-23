@@ -1,0 +1,3 @@
+DejaVu Fonts — licence Bitstream Vera / Arev (voir https://dejavu-fonts.github.io/License.html).
+Ces polices sont embarquées dans les PDF générés par FacturePro afin de garantir
+le rendu des caractères accentués français et du symbole euro.
