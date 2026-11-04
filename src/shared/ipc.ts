@@ -63,6 +63,19 @@ export const IPC = {
   backupsReveal: 'backups:reveal',
 
   printPdf: 'print:pdf',
+
+  // Synchronisation GarageFlows
+  syncStatus: 'sync:status',
+  syncPush: 'sync:push',
+  syncPull: 'sync:pull',
+  syncMetrics: 'sync:metrics',
+  syncConflicts: 'sync:conflicts',
+  syncResolveConflict: 'sync:resolve-conflict',
+  syncDeduplicate: 'sync:deduplicate',
+  syncGlobals: 'sync:globals',
+  syncConfigGet: 'sync:config-get',
+  syncConfigSave: 'sync:config-save',
+  syncForcePush: 'sync:force-push',
 } as const;
 
 export type IpcChannel = (typeof IPC)[keyof typeof IPC];
