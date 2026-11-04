@@ -37,8 +37,91 @@ import {
   TextInput,
   Textarea,
 } from '../components/ui';
+import { SyncPanel, SyncApiProvider, useSyncPanel } from '@garageflows/sync-core/ui';
+import React from 'react';
 
-export function SettingsPage() {
+// Sync API implementation for FacturePro (uses IPC)
+const factureProSyncApi = {
+  getStatus: async () => {
+    try {
+      return await api.invoke('sync:status');
+    } catch {
+      return { enabled: false, pendingEvents: 0 };
+    }
+  },
+  pushEvents: async () => {
+    try {
+      return await api.invoke('sync:push');
+    } catch {
+      return { pushed: 0, errors: ['Push failed'] };
+    }
+  },
+  pullEvents: async () => {
+    try {
+      return await api.invoke('sync:pull');
+    } catch {
+      return { pulled: 0, errors: ['Pull failed'] };
+    }
+  },
+  getMetrics: async () => {
+    try {
+      return await api.invoke('sync:metrics');
+    } catch {
+      return {};
+    }
+  },
+  listConflicts: async (globalId?: string) => {
+    try {
+      return await api.invoke('sync:conflicts', { globalId });
+    } catch {
+      return { conflicts: [] };
+    }
+  },
+  resolveConflict: async (conflictId: number, resolution: string, value?: any) => {
+    try {
+      return await api.invoke('sync:resolve-conflict', { conflictId, resolution, value });
+    } catch {
+      return { resolved: false };
+    }
+  },
+  runDeduplication: async () => {
+    try {
+      return await api.invoke('sync:deduplicate');
+    } catch {
+      return { matches: 0, autoMerged: 0 };
+    }
+  },
+  listGlobals: async (status?: string) => {
+    try {
+      return await api.invoke('sync:globals', { status });
+    } catch {
+      return { globals: [] };
+    }
+  },
+  getConfig: async () => {
+    try {
+      return await api.invoke('sync:config-get');
+    } catch {
+      return {};
+    }
+  },
+  saveConfig: async (config: any) => {
+    try {
+      return await api.invoke('sync:config-save', { config });
+    } catch {
+      return { saved: false };
+    }
+  },
+  forcePush: async () => {
+    try {
+      return await api.invoke('sync:force-push');
+    } catch {
+      return { pushed: 0, errors: ['Force push failed'] };
+    }
+  },
+};
+
+function SettingsPageInner() {
   const toast = useToast();
   const { settings, appInfo, refreshSettings, bumpData } = useAppData();
   const [draft, setDraft] = useState<AppSettings | null>(settings);
@@ -89,6 +172,8 @@ export function SettingsPage() {
   const vatRates = draft.fiscal.regime === 'normal'
     ? draft.fiscal.vatRates
     : [0];
+
+  const { metrics, conflicts, globals, config, actions, loading, error: syncError, reloadAll } = useSyncPanel();
 
   return (
     <div className="page">
@@ -427,6 +512,21 @@ export function SettingsPage() {
             </p>
           </div>
         </aside>
+
+        <section className="card stack">
+          <h3>Synchronisation GarageFlows</h3>
+          <p className="help">Synchronisation inter-applications (NEXA CRM, Contract Generator, FacturePro)</p>
+          <SyncPanel
+            metrics={metrics}
+            conflicts={conflicts}
+            globals={globals}
+            config={config}
+            actions={actions}
+            loading={loading}
+            error={syncError}
+            onRefresh={reloadAll}
+          />
+        </section>
       </div>
 
       <div className="settings-footer">
@@ -436,5 +536,14 @@ export function SettingsPage() {
         </Button>
       </div>
     </div>
+  );
+}
+
+// Export wrapped with SyncApiProvider
+export function SettingsPage() {
+  return (
+    <SyncApiProvider api={factureProSyncApi}>
+      <SettingsPageInner />
+    </SyncApiProvider>
   );
 }

@@ -258,6 +258,28 @@ export function createIpcHandlers(
       const result = await host.printPdf(filePath);
       return { ...result, invoiceNumber: invoice.number };
     }),
+
+    /* ------------------------------ Synchronisation ---------------------------- */
+    [IPC.syncStatus]: define(null, () => services.getSyncStatus?.() || { enabled: false }),
+    [IPC.syncPush]: define(null, () => services.pushSyncEvents?.() || { pushed: 0 }),
+    [IPC.syncPull]: define(null, () => services.pullSyncEvents?.() || { pulled: 0 }),
+    [IPC.syncMetrics]: define(null, () => services.getSyncMetrics?.() || {}),
+    [IPC.syncConflicts]: define(z.object({ globalId: z.string().optional() }), ({ globalId }) =>
+      services.listSyncConflicts?.(globalId) || { conflicts: [] },
+    ),
+    [IPC.syncResolveConflict]: define(
+      z.object({ conflictId: z.number(), resolution: z.string(), value: z.any().optional() }),
+      ({ conflictId, resolution, value }) => services.resolveSyncConflict?.(conflictId, resolution, value) || { resolved: true },
+    ),
+    [IPC.syncDeduplicate]: define(null, () => services.runSyncDeduplication?.() || { matches: 0, autoMerged: 0 }),
+    [IPC.syncGlobals]: define(z.object({ status: z.string().optional() }), ({ status }) =>
+      services.listGlobalCustomers?.(status) || { globals: [] },
+    ),
+    [IPC.syncConfigGet]: define(null, () => services.getSyncConfig?.() || {}),
+    [IPC.syncConfigSave]: define(z.object({ config: z.any() }), ({ config }) =>
+      services.saveSyncConfig?.(config) || { saved: true },
+    ),
+    [IPC.syncForcePush]: define(null, () => services.forceSyncPush?.() || { pushed: 0 }),
   };
 
   return handlers;
